@@ -78,42 +78,50 @@ const TurnosForm = () => {
     try {
       // Guardar el turno
       const turnoDocRef = await addDoc(collection(db, "turnos"), {
+        nombrePersona,
+        apellidoPersona,
+        telefono,
+        email,
+        direccion,
+        fechaConsulta,
+        cantidadMascotas: Number(cantidadMascotas),
+        mascotas, // Guardar todos los datos de cada mascota
+        userId: user.uid,
+        precioFinal,
+        descuentoAplicado,
+      });
+
+      // Guardar los datos en el historial clínico
+      for (const mascota of mascotas) {
+        await addDoc(collection(db, "historiales_clinicos"), {
           nombrePersona,
           apellidoPersona,
           telefono,
           email,
           direccion,
           fechaConsulta,
-          cantidadMascotas: Number(cantidadMascotas),
-          mascotas, // Guardar todos los datos de cada mascota
+          nombreMascota: mascota.nombrePerro,
+          tipoMascota: mascota.tipoMascota,
+          raza: mascota.raza,
+          sexo: mascota.sexo,
+          tipoConsulta: mascota.tipoConsulta,
+          precioFinalConDescuento: precioFinal,
           userId: user.uid,
-          precioFinal,
-          descuentoAplicado,
+          turnoId: turnoDocRef.id,
       });
-
-      // Guardar los datos en el historial clínico
-      for (const mascota of mascotas) {
-          await addDoc(collection(db, "historiales_clinicos"), {
-              nombreMascota: mascota.nombrePerro,
-              especieRaza: mascota.tipoMascota + "/" + mascota.raza,
-              sexoEdad: mascota.sexo + "/" + mascota.edad, // Asegúrate de tener el campo 'edad' en tus mascotas
-              motivoConsulta: mascota.tipoConsulta, // Puedes personalizar esto
-              userId: user.uid, // Guardar el ID del usuario
-              turnoId: turnoDocRef.id, // Guardar el ID del turno para referencia futura
-          });
       }
 
-      alert("Turno guardado exitosamente!");
+      alert("Turno y historial clínico guardados exitosamente!");
       // Limpiar los campos después de guardar
       setNombrePersona("");
-      setApellidoPersona("");
-      setTelefono("");
-      setEmail("");
-      setDireccion("");
-      setFechaConsulta("");
-      setCantidadMascotas(1);
-      setMascotas([]);
-      setError("");
+        setApellidoPersona("");
+        setTelefono("");
+        setEmail("");
+        setDireccion("");
+        setFechaConsulta("");
+        setCantidadMascotas(1);
+        setMascotas([]);
+        setError("");
   } catch (e) {
       console.error("Error al agregar el documento: ", e.message);
       setError("Error al guardar el turno. Por favor, intenta de nuevo.");

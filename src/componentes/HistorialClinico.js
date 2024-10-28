@@ -32,11 +32,18 @@ const HistorialClinico = () => {
     };
 
     const fetchHistoriales = async () => {
+        if (!user) return; // Asegura que el usuario esté autenticado antes de buscar
         const historialCollection = collection(db, "historiales_clinicos");
         const snapshot = await getDocs(historialCollection);
-        const historialesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+        // Filtrar solo los historiales del usuario autenticado
+        const historialesData = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(historial => historial.userId === user.uid); // Asumiendo que cada historial tiene un campo `userId` con el UID del usuario
+    
         setHistoriales(historialesData);
     };
+    
 
     useEffect(() => {
         if (user) {
@@ -69,18 +76,25 @@ const HistorialClinico = () => {
             <h2 className="hc-title">Historial Clínico de Mascotas</h2>
             {historiales.map((historial) => (
                 <div key={historial.id} className="hc-card">
-                    <h3>{historial.nombreMascota}</h3>
-                    <p><strong>Especie/Raza:</strong> {historial.especieRaza}</p>
-                    <p><strong>Sexo y Edad:</strong> {historial.sexoEdad}</p>
-                    <p><strong>Motivo de Consulta:</strong> {historial.motivoConsulta}</p>
-                    {/* Más campos del historial */}
-                    {isVeterinario && (
-                        <div className="hc-card-actions">
-                            <button onClick={() => handleEdit(historial.id, { /* updatedData aquí */ })}>Editar</button>
-                            <button onClick={() => handleDelete(historial.id)}>Eliminar</button>
-                        </div>
-                    )}
-                </div>
+                    <p><strong>Nombre:</strong> {historial.nombrePersona}</p>
+                <p><strong>Apellido:</strong> {historial.apellidoPersona}</p>
+                <p><strong>Teléfono:</strong> {historial.telefono}</p>
+                <p><strong>Email:</strong> {historial.email}</p>
+                <p><strong>Dirección:</strong> {historial.direccion}</p>
+                <p><strong>Fecha de Consulta:</strong> {historial.fechaConsulta}</p>
+                <h3><strong>Nombre del Perro:</strong> {historial.nombreMascota}</h3>
+                <p><strong>Tipo de Mascota:</strong> {historial.tipoMascota}</p>
+                <p><strong>Raza:</strong> {historial.raza}</p>
+                <p><strong>Sexo:</strong> {historial.sexo}</p>
+                <p><strong>Tipo de Consulta:</strong> {historial.tipoConsulta}</p>
+                <p><strong>Precio Final con Descuento:</strong> ${historial.precioFinalConDescuento}</p>
+                {isVeterinario && (
+                    <div className="hc-card-actions">
+                        <button onClick={() => handleEdit(historial.id, { /* updatedData aquí */ })}>Editar</button>
+                        <button onClick={() => handleDelete(historial.id)}>Eliminar</button>
+                    </div>
+                )}
+            </div>
             ))}
         </div>
     );
