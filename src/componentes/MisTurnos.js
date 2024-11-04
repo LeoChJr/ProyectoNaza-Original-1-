@@ -1,34 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { auth, db } from '../firebase';
-import { collection, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import './MisTurnos.css';
+import React, { useState, useEffect } from "react";
+import { auth, db } from "../firebase";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
+import "./MisTurnos.css";
 
 const MisTurnos = () => {
+  // Estados para almacenar los turnos, el turno en edición, y los datos del formulario.
   const [turnos, setTurnos] = useState([]);
   const [editingTurno, setEditingTurno] = useState(null);
   const [formData, setFormData] = useState({
-    nombrePersona: '',
-    apellidoPersona: '',
-    telefono: '',
-    email: '',
-    direccion: '',
-    fechaConsulta: '',
-    cantidadMascotas: '',
+    nombrePersona: "",
+    apellidoPersona: "",
+    telefono: "",
+    email: "",
+    direccion: "",
+    fechaConsulta: "",
+    cantidadMascotas: "",
     mascotas: [],
-    precioFinal: '',
-    descuentoAplicado: '',
+    precioFinal: "",
+    descuentoAplicado: "",
   });
 
+  // Obtiene los turnos del usuario actual de la base de datos.
   useEffect(() => {
     const fetchTurnos = async () => {
       const user = auth.currentUser;
       if (user) {
-        const turnosRef = collection(db, 'turnos');
+        const turnosRef = collection(db, "turnos");
         const turnosSnapshot = await getDocs(turnosRef);
         const turnosData = turnosSnapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(turno => turno.userId === user.uid);
-
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((turno) => turno.userId === user.uid);
+        console.log(turnosData); // Verifica los datos obtenidos
         setTurnos(turnosData);
       }
     };
@@ -36,6 +44,7 @@ const MisTurnos = () => {
     fetchTurnos();
   }, []);
 
+  // Maneja la edición de un turno, llenando los datos en el formulario.
   const handleEdit = (turno) => {
     setEditingTurno(turno.id);
     setFormData({
@@ -52,21 +61,28 @@ const MisTurnos = () => {
     });
   };
 
+  // Actualiza los datos de un turno en la base de datos.
   const handleUpdate = async () => {
     if (editingTurno) {
-      const turnoRef = doc(db, 'turnos', editingTurno);
+      const turnoRef = doc(db, "turnos", editingTurno);
       await updateDoc(turnoRef, formData);
-      setTurnos(turnos.map(turno => (turno.id === editingTurno ? { ...turno, ...formData } : turno)));
+      setTurnos(
+        turnos.map((turno) =>
+          turno.id === editingTurno ? { ...turno, ...formData } : turno
+        )
+      );
       setEditingTurno(null);
       setFormData({});
     }
   };
 
+  // Elimina un turno de la base de datos.
   const handleDelete = async (id) => {
-    await deleteDoc(doc(db, 'turnos', id));
-    setTurnos(turnos.filter(turno => turno.id !== id));
+    await deleteDoc(doc(db, "turnos", id));
+    setTurnos(turnos.filter((turno) => turno.id !== id));
   };
 
+  // Maneja los cambios en los datos del formulario.
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -81,27 +97,53 @@ const MisTurnos = () => {
         <p>No tienes turnos reservados.</p>
       ) : (
         <ul>
-          {turnos.map(turno => (
+          {turnos.map((turno) => (
             <li key={turno.id}>
-              <p><strong>Nombre:</strong> {turno.nombrePersona}</p>
-              <p><strong>Apellido:</strong> {turno.apellidoPersona}</p>
-              <p><strong>Teléfono:</strong> {turno.telefono}</p>
-              <p><strong>Email:</strong> {turno.email}</p>
-              <p><strong>Dirección:</strong> {turno.direccion}</p>
-              <p><strong>Fecha de Consulta:</strong> {turno.fechaConsulta}</p>
-              <p><strong>Cantidad de Mascotas:</strong> {turno.cantidadMascotas}</p>
-              <p><strong>Precio Final:</strong> ${turno.precioFinal}</p>
-              
+              <p>
+                <strong>Nombre:</strong> {turno.nombrePersona}
+              </p>
+              <p>
+                <strong>Apellido:</strong> {turno.apellidoPersona}
+              </p>
+              <p>
+                <strong>Teléfono:</strong> {turno.telefono}
+              </p>
+              <p>
+                <strong>Email:</strong> {turno.email}
+              </p>
+              <p>
+                <strong>Dirección:</strong> {turno.direccion}
+              </p>
+              <p>
+                <strong>Fecha de Consulta:</strong> {turno.fechaConsulta}
+              </p>
+              <p>
+                <strong>Cantidad de Mascotas:</strong> {turno.cantidadMascotas}
+              </p>
+              <p>
+                <strong>Precio Final:</strong> ${turno.precioFinal}
+              </p>
+
               {/* Mostrar información de cada mascota */}
               <div className="mascotas-list">
                 <h3>Datos de Mascotas:</h3>
                 {turno.mascotas.map((mascota, index) => (
                   <div key={index} className="mascota-info">
-                    <p><strong>Nombre Mascota:</strong> {mascota.nombreMascota}</p>
-                    <p><strong>Tipo:</strong> {mascota.tipoMascota}</p>
-                    <p><strong>Raza:</strong> {mascota.raza}</p>
-                    <p><strong>Sexo:</strong> {mascota.sexo}</p>
-                    <p><strong>Tipo de Consulta:</strong> {mascota.tipoConsulta}</p>
+                    <p>
+                      <strong>Nombre Mascota:</strong> {mascota.nombreMascota}
+                    </p>
+                    <p>
+                      <strong>Tipo:</strong> {mascota.tipoMascota}
+                    </p>
+                    <p>
+                      <strong>Raza:</strong> {mascota.raza}
+                    </p>
+                    <p>
+                      <strong>Sexo:</strong> {mascota.sexo}
+                    </p>
+                    <p>
+                      <strong>Tipo de Consulta:</strong> {mascota.tipoConsulta}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -172,8 +214,12 @@ const MisTurnos = () => {
               value={formData.precioFinal}
               readOnly
             />
-            <button type="button" onClick={handleUpdate}>Guardar Cambios</button>
-            <button type="button" onClick={() => setEditingTurno(null)}>Cancelar</button>
+            <button type="button" onClick={handleUpdate}>
+              Guardar Cambios
+            </button>
+            <button type="button" onClick={() => setEditingTurno(null)}>
+              Cancelar
+            </button>
           </form>
         </div>
       )}

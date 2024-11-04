@@ -5,11 +5,13 @@ import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 const Login = () => {
+  // Estados para almacenar los valores de correo electrónico, contraseña y mensaje de error.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
+  // Maneja el envío del formulario de inicio de sesión y verifica las credenciales del usuario.
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
@@ -24,7 +26,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="card">
-        <h2>Iniciar Sesion</h2>
+        <h2>Iniciar Sesión</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <input
@@ -49,11 +51,11 @@ const Login = () => {
           {errorMessage && <div className="error-message">{errorMessage}</div>}
 
           <button type="submit" className="login-button">
-            Iniciar Sesion
+            Iniciar Sesión
           </button>
         </form>
         <p className="signup-link">
-          No tienes cuenta Registrate <a href="/register">Registrarse</a>
+          No tienes cuenta? <a href="/register">Regístrate</a>
         </p>
       </div>
     </div>

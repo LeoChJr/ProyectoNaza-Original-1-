@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import "./TurnosForm.css";
@@ -8,6 +8,7 @@ import "./TurnosForm.css";
 const TurnosForm = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [role, setRol] = useState(null); // Agregar estado para el rol
   const [nombrePersona, setNombrePersona] = useState("");
   const [apellidoPersona, setApellidoPersona] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -21,17 +22,35 @@ const TurnosForm = () => {
   const [descuentoAplicado, setDescuentoAplicado] = useState(0);
   const [error, setError] = useState("");
 
+ 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
         navigate("/login");
       } else {
         setUser(currentUser);
+        const userDoc = await getDoc(doc(db, "usuarios", currentUser.uid)); // Cambia "usuarios" al nombre de tu colección
+        if (userDoc.exists()) {
+          setRol(userDoc.data().role); // Supone que el rol está almacenado como 'rol'
+        } else {
+          setError("Usuario no encontrado en la base de datos.");
+        }
       }
     });
     return () => unsubscribe();
   }, [navigate]);
 
+  // Verificar que el rol sea cliente
+  useEffect(() => {
+    if (role === "veterinario") {
+      alert("No tienes acceso a esta sección.");
+      navigate("/paginaPrincipal"); // Redirige a otra página o a la página de inicio
+    }
+  }, [role, navigate]);
+
+  
+  
+  
   useEffect(() => {
     let descuento = 0;
     if (cantidadMascotas >= 2 && cantidadMascotas <= 6) {
@@ -108,24 +127,24 @@ const TurnosForm = () => {
           precioFinalConDescuento: precioFinal,
           userId: user.uid,
           turnoId: turnoDocRef.id,
-      });
+        });
       }
 
       alert("Turno y historial clínico guardados exitosamente!");
       // Limpiar los campos después de guardar
       setNombrePersona("");
-        setApellidoPersona("");
-        setTelefono("");
-        setEmail("");
-        setDireccion("");
-        setFechaConsulta("");
-        setCantidadMascotas(1);
-        setMascotas([]);
-        setError("");
-  } catch (e) {
+      setApellidoPersona("");
+      setTelefono("");
+      setEmail("");
+      setDireccion("");
+      setFechaConsulta("");
+      setCantidadMascotas(1);
+      setMascotas([]);
+      setError("");
+    } catch (e) {
       console.error("Error al agregar el documento: ", e.message);
       setError("Error al guardar el turno. Por favor, intenta de nuevo.");
-  }
+    }
   };
 
   const getDescuentoTexto = () => {

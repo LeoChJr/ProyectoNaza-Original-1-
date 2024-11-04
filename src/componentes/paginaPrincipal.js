@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import React from "react";
+import { Link } from "react-router-dom";
 import "./paginaInicio.css";
 
-const paginaPrincipal = () => {
+const PaginaPrincipal = () => {
+  // Maneja el cierre de sesión mostrando una alerta.
   const handleLogout = () => {
     alert("Sesión cerrada exitosamente.");
   };
@@ -22,7 +21,6 @@ const paginaPrincipal = () => {
           <Link to="/historialClinico" className="nav-item">
             Historial Clínico
           </Link>
-
           <Link to="/medicamentos" className="nav-item">
             Medicamentos
           </Link>
@@ -32,7 +30,6 @@ const paginaPrincipal = () => {
           <Link to="/misturnos" className="nav-item">
             Mis turnos
           </Link>
-
           <Link to="/login" className="nav-item" onClick={handleLogout}>
             Cerrar Sesion
           </Link>
@@ -80,4 +77,4 @@ const paginaPrincipal = () => {
   );
 };
 
-export default paginaPrincipal;
+export default PaginaPrincipal;

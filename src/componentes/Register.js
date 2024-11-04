@@ -1,33 +1,41 @@
 import React, { useState } from "react";
-import { auth, db } from "../firebase"; // Asegúrate de importar Firestore
+import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"; // Importa setDoc para guardar en Firestore
+import { doc, setDoc } from "firebase/firestore";
 import "./Register.css";
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("cliente"); // Estado para el rol, por defecto "cliente"
   const [errorMessage, setErrorMessage] = useState("");
 
   // Función para registrar usuario en Firestore
   const registrarUsuarioEnFirestore = async (user) => {
-    const userRef = doc(db, "usuarios", user.uid);
-    await setDoc(userRef, {
-      email: user.email,
-      sueldo: 10000, // Saldo inicial
-      puntos: 0 // Puntos iniciales
-    });
+    try {
+      const userRef = doc(db, "usuarios", user.uid);
+      await setDoc(userRef, {
+        email: user.email,
+        sueldo: 10000, // Saldo inicial
+        puntos: 0, // Puntos iniciales
+        role: role, // Guarda el rol seleccionado
+      });
+      console.log("Usuario guardado en Firestore con rol:", role);
+    } catch (error) {
+      console.error("Error al guardar el usuario en Firestore:", error);
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       console.log("Usuario registrado");
-
-      // Llama a la función para agregar el usuario en Firestore
-      await registrarUsuarioEnFirestore(userCredential.user); // Agrega el usuario a Firestore
-      console.log("Usuario registrado en Firestore");
+      await registrarUsuarioEnFirestore(userCredential.user);
     } catch (error) {
       setErrorMessage(error.message);
     }
@@ -58,13 +66,24 @@ const Register = () => {
               required
             />
           </div>
+          <div className="input-group">
+            <select
+              className="input-field"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              required
+            >
+              <option value="cliente">Cliente</option>
+              <option value="veterinario">Veterinario</option>
+            </select>
+          </div>
           {errorMessage && <div className="error-message">{errorMessage}</div>}
           <button type="submit" className="register-button">
             Registrarse
           </button>
         </form>
         <p className="signin-link">
-          Ya tienes una cuenta <a href="/login">Iniciar Sesion</a>
+          Ya tienes una cuenta? <a href="/login">Iniciar Sesion</a>
         </p>
       </div>
     </div>
