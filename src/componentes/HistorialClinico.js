@@ -18,6 +18,24 @@ const HistorialClinico = () => {
   const [isVeterinario, setIsVeterinario] = useState(false);
   // Estado para almacenar el usuario autenticado actual.
   const [user, setUser] = useState(null);
+  // Estado para controlar si estamos editando un historial y los datos actuales.
+  const [editingHistorial, setEditingHistorial] = useState(null);
+  const [formData, setFormData] = useState({
+    nombrePersona: "",
+    apellidoPersona: "",
+    telefono: "",
+    email: "",
+    direccion: "",
+    fechaConsulta: "",
+    nombreMascota: "",
+    tipoMascota: "",
+    raza: "",
+    sexo: "",
+    tipoConsulta: "",
+    precioFinalConDescuento: "",
+    diagnostico: "", // Campo adicional
+    tratamiento: "", // Campo adicional
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -31,7 +49,7 @@ const HistorialClinico = () => {
     });
     return () => unsubscribe();
   }, []);
-  
+
   // Verifica el rol del usuario autenticado
   const checkUserRole = async (userId) => {
     const usersCollection = collection(db, "usuarios");
@@ -47,26 +65,28 @@ const HistorialClinico = () => {
   const fetchHistoriales = async () => {
     const historialCollection = collection(db, "historiales_clinicos");
     const snapshot = await getDocs(historialCollection);
-  
+
     let historialesData;
     if (isVeterinario) {
-      historialesData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      historialesData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       console.log("Historiales para veterinario:", historialesData);
     } else {
       historialesData = snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
         .filter((historial) => historial.userId === user.uid);
     }
-  
+
     setHistoriales(historialesData);
   };
 
-  // Llama a la función para obtener los historiales una vez que el usuario se autentica.
   useEffect(() => {
-    if (user || isVeterinario) { // Cambiado a 'user || isVeterinario' para que se llame también al rol
+    if (user || isVeterinario) {
       fetchHistoriales();
     }
-  }, [user, isVeterinario]); // Añadir isVeterinario como dependencia
+  }, [user, isVeterinario]);
 
   // Elimina un historial clínico de la base de datos y del estado si el usuario tiene permisos de veterinario.
   const handleDelete = async (id) => {
@@ -79,19 +99,55 @@ const HistorialClinico = () => {
     }
   };
 
-  // Edita un historial clínico en la base de datos y actualiza el estado local con los datos actualizados.
-  const handleEdit = async (id, updatedData) => {
+  // Función para manejar la edición de un historial clínico
+  const handleEdit = (historial) => {
+    setEditingHistorial(historial.id);
+    setFormData({
+      nombrePersona: historial.nombrePersona,
+      apellidoPersona: historial.apellidoPersona,
+      telefono: historial.telefono,
+      email: historial.email,
+      direccion: historial.direccion,
+      fechaConsulta: historial.fechaConsulta,
+      nombreMascota: historial.nombreMascota,
+      tipoMascota: historial.tipoMascota,
+      raza: historial.raza,
+      sexo: historial.sexo,
+      tipoConsulta: historial.tipoConsulta,
+      precioFinalConDescuento: historial.precioFinalConDescuento,
+      diagnostico: historial.diagnostico || "", // Asegurarse de que el campo se llene correctamente
+      tratamiento: historial.tratamiento || "", // Asegurarse de que el campo se llene correctamente
+    });
+  };
+
+  // Función para actualizar los datos editados
+  const handleUpdate = async () => {
     if (!isVeterinario) return;
     try {
-      await updateDoc(doc(db, "historiales_clinicos", id), updatedData);
+      await updateDoc(
+        doc(db, "historiales_clinicos", editingHistorial),
+        formData
+      );
       setHistoriales(
         historiales.map((historial) =>
-          historial.id === id ? { ...historial, ...updatedData } : historial
+          historial.id === editingHistorial
+            ? { ...historial, ...formData }
+            : historial
         )
       );
+      setEditingHistorial(null);
     } catch (error) {
       console.error("Error al actualizar el historial:", error);
     }
+  };
+
+  // Maneja los cambios en los campos del formulario
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   return (
@@ -136,17 +192,22 @@ const HistorialClinico = () => {
             <strong>Precio Final con Descuento:</strong> $
             {historial.precioFinalConDescuento}
           </p>
+
+          {/* Mostrar campos adicionales si están disponibles */}
+          {historial.diagnostico && (
+            <p>
+              <strong>Diagnóstico:</strong> {historial.diagnostico}
+            </p>
+          )}
+          {historial.tratamiento && (
+            <p>
+              <strong>Tratamiento:</strong> {historial.tratamiento}
+            </p>
+          )}
+
           {isVeterinario && (
             <div className="hc-card-actions">
-              <button
-                onClick={() =>
-                  handleEdit(historial.id, {
-                    /* updatedData aquí */
-                  })
-                }
-              >
-                Editar
-              </button>
+              <button onClick={() => handleEdit(historial)}>Editar</button>
               <button onClick={() => handleDelete(historial.id)}>
                 Eliminar
               </button>
@@ -154,6 +215,114 @@ const HistorialClinico = () => {
           )}
         </div>
       ))}
+      {/* Formulario para editar el historial clínico */}
+      {editingHistorial && (
+        <div className="edit-form">
+          <h3>Editar Historial Clínico</h3>
+          {/* Los campos existentes */}
+          <input
+            type="text"
+            name="nombrePersona"
+            value={formData.nombrePersona}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="apellidoPersona"
+            value={formData.apellidoPersona}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="telefono"
+            value={formData.telefono}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="direccion"
+            value={formData.direccion}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="date"
+            name="fechaConsulta"
+            value={formData.fechaConsulta}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="nombreMascota"
+            value={formData.nombreMascota}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="tipoMascota"
+            value={formData.tipoMascota}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="raza"
+            value={formData.raza}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="sexo"
+            value={formData.sexo}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="tipoConsulta"
+            value={formData.tipoConsulta}
+            onChange={handleInputChange}
+            disabled
+          />
+          <input
+            type="text"
+            name="precioFinalConDescuento"
+            value={formData.precioFinalConDescuento}
+            onChange={handleInputChange}
+            disabled
+          />
+
+          {/* Campos adicionales */}
+          <input
+            type="text"
+            name="diagnostico"
+            value={formData.diagnostico}
+            onChange={handleInputChange}
+            placeholder="Diagnóstico"
+          />
+          <input
+            type="text"
+            name="tratamiento"
+            value={formData.tratamiento}
+            onChange={handleInputChange}
+            placeholder="Tratamiento"
+          />
+          <button onClick={handleUpdate}>Actualizar</button>
+        </div>
+      )}
     </div>
   );
 };

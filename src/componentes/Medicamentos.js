@@ -5,11 +5,11 @@ import "./Medicamentos.css";
 
 // Datos de los medicamentos con sus nombres y precios respectivos.
 const medicamentosData = [
-  { id: 1, nombre: "Antibiótico A", precio: 250 },
-  { id: 2, nombre: "Antiinflamatorio B", precio: 400 },
-  { id: 3, nombre: "Analgesico C", precio: 150 },
-  { id: 4, nombre: "Desparasitante D", precio: 300 },
-  { id: 5, nombre: "Vacuna E", precio: 600 },
+  { id: 1, nombre: "Amoxicilina", precio: 250 },
+  { id: 2, nombre: "Ivermectina", precio: 400 },
+  { id: 3, nombre: "Ampicilina", precio: 150 },
+  { id: 4, nombre: "Metacam (meloxicam) ", precio: 300 },
+  { id: 5, nombre: "Vacuna", precio: 600 },
 ];
 
 const Medicamentos = () => {
